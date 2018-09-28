@@ -117,7 +117,7 @@ public class SparkCmds {
 			}
 
 		} catch (Exception ee) {
-			throw new IllegalArgumentException("Invalid command string: " + cmdStr);
+			throw new IllegalArgumentException("Invalid command string: " + cmdStr + "\n" + ee.getMessage());
 		}
 	}
 

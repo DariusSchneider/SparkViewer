@@ -29,13 +29,10 @@ public class SparkViewer {
 	    spark.sparkContext().setLogLevel("ERROR");
 	                  
 	    if (args.length > 0) {
-	      String rootDir = args[0];       
+	      SparkMainView.setLastDir(args[0]);       
 	    }
 	    
 	    SparkMainView.start(new SparkCmds(spark));
-	    
-//	    val input = scala.io.StdIn.readLine("press ENTER to stop >>> ")
-
 	}
 
 }

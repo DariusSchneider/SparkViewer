@@ -191,17 +191,29 @@ public class SparkMainView {
 			addMenuItems();
 		}
 	};
-	private static File lastFile = null;
+	private static File lastDir = null;
+	public  static void setLastDir(String dirpath) {
+		lastDir = new File(dirpath);
+	}
 	private static ActionListener openFile = new ActionListener() {
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			JFileChooser jFileChooser = new JFileChooser(lastFile);
+			JFileChooser jFileChooser = new JFileChooser(lastDir);
 			jFileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 			int result = jFileChooser.showOpenDialog(new JFrame());
 			if (result == JFileChooser.APPROVE_OPTION) {
-				lastFile = jFileChooser.getSelectedFile();
+				File lastFile = jFileChooser.getSelectedFile();
 				String selstr = lastFile.getAbsolutePath();
-				String tab = sparkCmd.execCmd("openfile:" + selstr); // TODO exec openfile as function
+				setLastDir(selstr.substring(0, selstr.lastIndexOf('/')));
+				String tab = null;
+				try {
+				   tab = sparkCmd.execCmd("openfile;" + selstr); // TODO exec openfile as function
+				}
+				catch (Exception ee) {
+					JOptionPane.showMessageDialog(new JFrame(), ee.getMessage(), "execute error",
+							JOptionPane.ERROR_MESSAGE);
+					return;					
+				}
 				Dataset<Row> dataset = sparkCmd.getSpark().table(tab);
 				performopen(dataset, tab, limit0);
 			}
