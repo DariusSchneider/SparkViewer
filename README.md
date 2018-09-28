@@ -85,7 +85,7 @@ We use [SemVer](http://semver.org/) for versioning. For the versions available, 
 
 ### Authors
 
-* **DariusSchneider** - *Initial work* - [SparkViewer](https://github.com/SparkViewer)
+* **DariusSchneider** - *Initial work* - [SparkViewer](https://github.com/DariusSchneider/SparkViewer)
 
 See also the list of [contributors](https://github.com/your/project/contributors) who participated in this project.
 
