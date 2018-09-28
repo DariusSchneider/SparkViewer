@@ -48,6 +48,11 @@ cd ..path_to_src_dir..
 javac ..path_to_java_files../*
 jar   src.de.equbotic.sparkviewer.*
 ```
+<<<<<<< HEAD
+=======
+
+### use with eclipse
+>>>>>>> d780edf140e3049d249721732521a759363f4530
 
 ### use with eclipse
 ```
@@ -55,7 +60,11 @@ Create a new java project in eclipse.
 Copy the scr directory to your projrct src directory.
 Add the spark jars as external libraries.
 Now your project should build.
+<<<<<<< HEAD
 ```
+=======
+
+>>>>>>> d780edf140e3049d249721732521a759363f4530
 ## View a Dataset
 
 The Table View shows a Spark dataset in one frame with several tabs.
