@@ -15,7 +15,7 @@ The Spark 'lib' directory has to be accessible.
 ### start the jar
 
 The jar can directly be started with java.
-You can use the prebuild jar of the repository or use your builded jar file.
+You can use the prebuild jar of the repository (build with java version "1.8.0_71") or use your builded jar file.
 
 Example start script for windows spark localmode:
 ```
