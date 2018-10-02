@@ -9,8 +9,8 @@ link/embed > tree view
 
 ## Quick Start
 ### Prerequisites
-You need a SparkInstallation to use this GUI.
-The Spark 'lib' directory has to be accesible. 
+You need a Spark Installation to use this GUI.
+The Spark 'lib' directory has to be accessible.
 
 ### start the jar
 
@@ -23,9 +23,9 @@ SET JAVA_HOME=..path_to..\jdk1.8.0_77
 SET SPARK_HOME=..path_to..\spark-2.2.1-bin-hadoop2.7
 SET HADOOP_HOME=..path_to..\winutils
 
+cd ..path_to_sparkviewer_jar..
 SET path=%JAVA_HOME%\bin;%HADOOP_HOME%\bin;
 SET CLASSPATH=SparkViewer.jar;%SPARK_HOME%\jars\*
-cd ..path_to_sparkviewer_jar..
 
 java -Xmx6000M -Dspark.driver.memory=2g de.equbotic.sparkviewer.SparkViewer (optional parameter: /path/to/sparkdata/directoy/)
 ```
@@ -44,9 +44,13 @@ SparkMainView.start(cmds)
 
 Compile the sources and build the jar:
 ```
-cd ..path_to_src_dir..
-javac ..path_to_java_files../*
-jar   src.de.equbotic.sparkviewer.*
+set JAVA_HOME=/home/tools/java/jdk1.8.0_77
+set SPARK_HOME=/home/tools/spark/spark-2.2.0-bin-hadoop2.7
+set  MY_HOME=/home/work/prj/SparkViewer
+path=%JAVA_HOME%/bin
+cd %MY_HOME%/src
+javac de/equbotic/sparkviewer/*.java -cp .;%SPARK_HOME%/jars/*
+jar cvf sparkViewer.jar de/equbotic/sparkviewer/*.java
 ```
 ### use with eclipse
 ```
@@ -58,10 +62,10 @@ Now your project should build.
 ## View a Dataset
 
 The Table View shows a Spark dataset in one frame with several tabs.
-Per default the first 200 rows are shown, which can be changed. 
+Per default the first 200 rows are shown, which can be changed.
 
 ### Data Table Tab
- 
+
 ### Tree Tab
 
 ### Schema Tab
@@ -80,7 +84,7 @@ Please read [CONTRIBUTING.md](https://gist.github.com/PurpleBooth/b24679402957c6
 
 ### Versioning
 
-We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/your/project/tags). 
+We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/your/project/tags).
 
 ### Authors
 
@@ -91,4 +95,3 @@ See also the list of [contributors](https://github.com/DariusSchneider/SparkView
 ### License
 
 This project is licensed under the GNU GPL3 License - see the [LICENSE](LICENSE) file for details
-
