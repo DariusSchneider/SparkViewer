@@ -30,20 +30,30 @@ public class DfTableModel extends AbstractTableModel {
 	        private StructType schema    = null;
 	        String[]           fldnames  = null;
 	        String             title     = null;
-            Dataset<Row>       dataset  = null;
+            Dataset<Row>       dataset   = null;
+            String             tabname   = null;
 	        
-	        public DfTableModel(Row[] rr, StructType schem, String titl, Dataset<Row> ds) {	        
+	        public DfTableModel(Row[] rr, StructType schem, String titl, Dataset<Row> ds, String tabnam) {	        
 	        	rows   = rr;
 	        	schema = schem;
 	        	fldnames = schema.fieldNames();
 	        	title    = titl;
 	        	dataset  = ds;
+	        	tabname  = tabnam;
 	        }
 		//  private String[] columnNames = ...//same as before...
 		//  private Object[][] data = ...//same as before...
 
 	        public Dataset<Row> getDataFrame() {
 	        	return dataset;
+	        }
+
+	        public String getTableName() {
+	        	return tabname;
+	        }
+
+	        public String[] getFieldNames() {
+	        	return fldnames;
 	        }
 	        
 	        public String getTitle() {
@@ -66,7 +76,11 @@ public class DfTableModel extends AbstractTableModel {
 		    }
 
 		    public Object getValueAt(int row, int col) {
-		    	return rows[row].get(col);
+		    	try {
+		    	  return rows[row].get(col);
+		    	} catch (Exception ee) {
+		    		return null;
+		    	}
 		    }
 
 		    public Class getColumnClass(int c) {

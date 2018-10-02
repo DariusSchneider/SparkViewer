@@ -19,6 +19,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package de.equbotic.sparkviewer;
 
 import java.awt.Dimension;
+import java.awt.FileDialog;
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -62,13 +66,13 @@ public class SparkMainView {
 						Row[] oo = (Row[]) wa.array();
 						StructType schema = oo[0].schema();
 
-						performopenArr(oo, schema, titl, null);
+						performopenArr(oo, schema, titl, null, null);
 					} else if (cel instanceof GenericRowWithSchema) {
 						Row ro = ((GenericRowWithSchema) cel);
 						Row[] oo = new Row[] { ro };
 						StructType schema = ro.schema();
 
-						performopenArr(oo, schema, titl, null);
+						performopenArr(oo, schema, titl, null, null);
 					}
 				}
 			}
@@ -95,8 +99,27 @@ public class SparkMainView {
 			int cc = dftable.getSelectedColumn();
 			String colnam = (cc < 0) ? "?" : dftable.getColumnName(cc);
 
-			// String intext = JOptionPane.showInputDialog(e.getSource(), colnam);
-			String intext = JOptionPane.showInputDialog(name, colnam);
+			if (name.startsWith("copy_headers")) { //just copy the headers
+                String[] flds = dfTabMod.getFieldNames();
+				String fldstr = "";
+				for (String fld : flds) fldstr = fldstr + (fldstr.isEmpty() ? "" : "\t") + fld;
+				Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(fldstr), null);
+				return;
+			}
+			
+			String intext = null;
+			if (name.startsWith("write")) {
+				JFileChooser jFileChooser = new JFileChooser(lastDir);
+				             jFileChooser.setDialogTitle(name + ": select name"); 
+				int result = jFileChooser.showSaveDialog(new JFrame());
+				if (result == JFileChooser.APPROVE_OPTION) {
+					File tosave = jFileChooser.getSelectedFile();
+					intext = tosave.getAbsolutePath();
+				}
+			} else
+				intext = JOptionPane.showInputDialog(name, colnam);
+			
+			
 			if (intext != null) {
 
 				Dataset<Row> ds = dfTabMod.getDataFrame();
@@ -104,18 +127,31 @@ public class SparkMainView {
 				switch (name) {
 				case "filter":
 					Dataset<Row> dsfil = ds.filter(intext);
-					performopen(dsfil, titlBas + " > filter:" + intext, limit0);
+					performopen(dsfil, null, titlBas + " > filter:" + intext, limit0);
 					break;
-
 				case "limit":
-					performopen(ds, titlBas, Integer.parseInt(intext));
+					performopen(ds, null, titlBas, Integer.parseInt(intext));
 					break;
-
 				case "distinct":
 					Dataset<Row> dsdis = ds.groupBy(intext).count().sort(intext);
-					performopen(dsdis, titlBas + " > distinct:" + intext, limit0);
+					performopen(dsdis, null, titlBas + " > distinct:" + intext, limit0);
 					break;
-
+				case "writepq_and_load":
+					sparkCmd.writepq(intext, ds);
+					String nam = sparkCmd.open (intext);
+					Dataset<Row> dataset = sparkCmd.getSpark().table(nam);
+					performopen(dataset, nam, nam, limit0);
+					break;
+				case "writecsv":
+					sparkCmd.writecsv(intext, ds);
+					JOptionPane.showMessageDialog(new JFrame(), "csv written to: " + intext);
+					consoleTxt.setText(consoleTxt.getText() + "\nwritecsv; " + intext);
+					break;
+				case "writejson":
+					sparkCmd.writejson(intext, ds);
+					JOptionPane.showMessageDialog(new JFrame(), "json written to: " + intext);
+					consoleTxt.setText(consoleTxt.getText() + "\nwritejson; " + intext);
+					break;
 				}
 
 			}
@@ -141,7 +177,26 @@ public class SparkMainView {
 		JMenuItem itm3 = new JMenuItem("distinct");
 		itm3.addActionListener(tabListen);
 		popMenu.add(itm3);
+		
+		JMenuItem itm9 = new JMenuItem("-------------");
+		popMenu.add(itm9);
 
+		JMenuItem itm7 = new JMenuItem("copy_headers");  //TODO copy to clipboard with tabs for excel
+		itm7.addActionListener(tabListen);
+		popMenu.add(itm7);
+
+		JMenuItem itm4 = new JMenuItem("writepq_and_load");
+		itm4.addActionListener(tabListen);
+		popMenu.add(itm4);
+		
+		JMenuItem itm5 = new JMenuItem("writecsv");
+		itm5.addActionListener(tabListen);
+		popMenu.add(itm5);
+		
+		JMenuItem itm6 = new JMenuItem("writejson");
+		itm6.addActionListener(tabListen);
+		popMenu.add(itm6);
+		
 		return popMenu;
 	}
 
@@ -161,10 +216,7 @@ public class SparkMainView {
 					JOptionPane.showMessageDialog(new JFrame(), "command executed");
 				} else {
 					Dataset<Row> dataset = sparkCmd.getSpark().table(nam);
-					performopen(dataset, nam, limit0);
-					JMenuItem itm = new JMenuItem(nam);
-					itm.addActionListener(openTable);
-					theMenu.add(itm);
+					performopen(dataset, nam, nam, limit0);
 				}
 			} catch (Exception ee) {
 				JOptionPane.showMessageDialog(new JFrame(), ee.getMessage(), "execute error",
@@ -180,7 +232,8 @@ public class SparkMainView {
 		public void actionPerformed(ActionEvent e) {
 			String name = e.getActionCommand();// getSource()
 			Dataset<Row> dataset = sparkCmd.getSpark().table(name);
-			performopen(dataset, name, limit0);
+			performopen(dataset, name, name, limit0);
+			
 		}
 	};
 
@@ -203,11 +256,11 @@ public class SparkMainView {
 			int result = jFileChooser.showOpenDialog(new JFrame());
 			if (result == JFileChooser.APPROVE_OPTION) {
 				File lastFile = jFileChooser.getSelectedFile();
-				String selstr = lastFile.getAbsolutePath();
+				String selstr = lastFile.getAbsolutePath().replace('\\','/');
 				setLastDir(selstr.substring(0, selstr.lastIndexOf('/')));
 				String tab = null;
 				try {
-				   tab = sparkCmd.execCmd("openfile;" + selstr); // TODO exec openfile as function
+				   tab = sparkCmd.open(selstr);
 				}
 				catch (Exception ee) {
 					JOptionPane.showMessageDialog(new JFrame(), ee.getMessage(), "execute error",
@@ -215,7 +268,7 @@ public class SparkMainView {
 					return;					
 				}
 				Dataset<Row> dataset = sparkCmd.getSpark().table(tab);
-				performopen(dataset, tab, limit0);
+				performopen(dataset, tab, tab, limit0);
 			}
 
 		}
@@ -227,16 +280,10 @@ public class SparkMainView {
 	private static void addMenuItems() { // add to theMenu
 		List<Table> tabs = sparkCmd.getSpark().catalog().listTables().collectAsList();
 
-		// TODO write JSON
-		// tname.repartition(1).write.json("C:/tmp/hive/_tmp/json_someID_timestamp")
-		// or pretty Json val rpPretty = pretty (rpJval) //is a pretty JSON-String
-		// toFile(filename + ".json", rpPretty) //siehe separate scripte
-
-		// TODO separates menu fuer tabs mit >define prefix<
 		JMenuItem itm6 = new JMenuItem("refresh tablelist");
 		itm6.addActionListener(refreshMenu);
 		theMenu.add(itm6);
-		JMenuItem itm2 = new JMenuItem("prefix (todo)");
+		JMenuItem itm2 = new JMenuItem("prefix (todo)");  // TODO >define prefix<
 		// itm2.addActionListener(openFile);
 		theMenu.add(itm2);
 		JMenuItem itm5 = new JMenuItem("-------------");
@@ -254,7 +301,7 @@ public class SparkMainView {
 	 */
 	private static JMenuBar createMenuBar() {
 		// ----------------------------------------------------------------
-		JMenu execmenu = new JMenu("execute");
+		JMenu execmenu = new JMenu("exec/open");
 		JMenuItem itm1 = new JMenuItem("exec command");
 		itm1.addActionListener(execCmd);
 		execmenu.add(itm1);
@@ -263,17 +310,15 @@ public class SparkMainView {
 		execmenu.add(itm2);
 		JMenuItem itm5 = new JMenuItem("-------------");
 		execmenu.add(itm5);
-		// TODO one menu for cmnds. Params taken from DataFrameCmds. With Generic Dialog
-		// to open
-		JMenuItem itmc1 = new JMenuItem("open file");
+		JMenuItem itmc1 = new JMenuItem("open file (infer type TODO)");  //TODO infer filetype
 		itmc1.addActionListener(openFile);
 		execmenu.add(itmc1);
 		// ----------------------------------------------------------------
 		JMenu helpmenu = new JMenu("help");
-		JMenuItem itmh1 = new JMenuItem("readme (todo)"); // show readme.txt
+		JMenuItem itmh1 = new JMenuItem("readme TODO"); //TODO show readme.txt
 		// itmh1.addActionListener(openFile);
 		helpmenu.add(itmh1);
-		JMenuItem itmh2 = new JMenuItem("about (todo)");
+		JMenuItem itmh2 = new JMenuItem("about TODO");  //TODO show about
 		// itmh2.addActionListener(openFile);
 		helpmenu.add(itmh2);
 
@@ -293,7 +338,8 @@ public class SparkMainView {
 	/**
 	 * open a dataframe in a dataframeview - calls performopenArr
 	 */
-	public static void performopen(Dataset<Row> datasetin, String nameOrCmd, int limi) {
+	public static void performopen(Dataset<Row> datasetin, String tabname, String cmdstr, int limi) {
+		String nameOrCmd = (cmdstr != null) ? cmdstr : tabname;
 
 		Dataset<Row> dataset = datasetin.limit(limi);
 		long dfanz = datasetin.count();
@@ -303,7 +349,12 @@ public class SparkMainView {
 
 		StructType schema = dataset.schema();
 
-		performopenArr((Row[]) listRow.toArray(), schema, nameOrCmd + " (" + stranz + ")", datasetin);
+		performopenArr((Row[]) listRow.toArray(), schema, nameOrCmd + " (" + stranz + ")", tabname, datasetin);
+		if (tabname != null && !tabname.isEmpty() ) {
+			JMenuItem itm = new JMenuItem(tabname);
+			itm.addActionListener(openTable);
+			theMenu.add(itm);
+		}
 	}
 
 	public static DefaultMutableTreeNode getRowTree(Row rr, String txt) {
@@ -345,7 +396,8 @@ public class SparkMainView {
 	/**
 	 * open a row array in a dataframeview
 	 */
-	public static void performopenArr(Row[] rrr, StructType schema, String nameOrCmd, Dataset<Row> ds) {
+	public static void performopenArr(Row[] rrr, StructType schema, String cmdstr, String tabname, Dataset<Row> ds) {
+		String nameOrCmd = (cmdstr != null) ? cmdstr : tabname;
 		consoleTxt.setText(consoleTxt.getText() + "\n" + nameOrCmd);
 
 		StringBuffer rowStrBuf = new StringBuffer();
@@ -353,7 +405,7 @@ public class SparkMainView {
 			rowStrBuf.append(row.toString() + "\n");
 		}
 
-		DfTableModel dftabmod = new DfTableModel(rrr, schema, nameOrCmd, ds);
+		DfTableModel dftabmod = new DfTableModel(rrr, schema, nameOrCmd, ds, tabname);
 
 		// =====================================================
 		JTable dftable = new JTable(dftabmod) {
@@ -374,18 +426,14 @@ public class SparkMainView {
 			}
 		};
 		dftable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+		dftable.setAutoCreateRowSorter(true);
 		dftable.setFillsViewportHeight(true);
 		dftable.addMouseListener(openClick);
 		if (ds != null)
 			dftable.setComponentPopupMenu(createDsPopup(dftable));
 
-		// JTextArea txtrows = new JTextArea();
-		// txtrows.setEditable(false);
-		// txtrows.setText(rowStrBuf.toString());
-
-		// TODO create a TreeView with JTable subview
 		JTree treeDs = getTree(rrr);
-		// treeDs.setEditable(false);
+		treeDs.setEditable(false);
 
 		JTextArea txtschema = new JTextArea();
 		txtschema.setEditable(false);
@@ -394,7 +442,6 @@ public class SparkMainView {
 		// -----------------------
 		JTabbedPane tabs = new JTabbedPane(JTabbedPane.TOP);
 		tabs.addTab("table", new JScrollPane(dftable));
-		// tabs.addTab("rows", new JScrollPane(txtrows));
 		tabs.addTab("tree", new JScrollPane(treeDs));
 		tabs.addTab("schema", new JScrollPane(txtschema));
 		tabs.setPreferredSize(new Dimension(800, 500));
@@ -410,7 +457,6 @@ public class SparkMainView {
 	 * create and show gui
 	 */
 	private static void createAndShowGUI() {
-		// TODO COPYRIGHT + OPENSOURCE
 		// TODO comment everything
 		// TODO remove warnings
 
@@ -419,14 +465,15 @@ public class SparkMainView {
 
 		consoleTxt = new JTextArea();
 		consoleTxt.setPreferredSize(new Dimension(900, 700));
-		// consoleTxt.setComponentPopupMenu(createMainPopup());
 
-		// TODO Text taken from DataFrameCmds
 		consoleTxt.setText("\n\n\n"
 				+ "===============================================================================================================\n"
-				+ "opentable via menu 'tables'\n\n" + "commands:\n" + "openfile;   \tFileName; \ttableName\n"
-				+ "execsql;    \tsqlStr;   \ttableName\n" + "writetable; \tFileName; \ttableName (makes reread)\n"
-				+ "writecsv;   \tFileName; \ttableName\n\n"
+				+ "opentable via menu 'tables'\n\n" + "commands:\n" 
+				+ "open;       \tFileName; \ttableName\n"   //TODO open json csv 
+				+ "execsql;    \tsqlStr;   \ttableName\n" 
+				+ "writepq;    \tFileName; \ttableName (makes reread)\n"
+				+ "writecsv;   \tFileName; \ttableName\n"
+				+ "writejson;  \tFileName; \ttableName\n\n"
 				+ "executed marked or text above '=...'-line via menu 'exec'\n"
 				+ "multiple commands can be separated with a '-...' line\n"
 				+ "Comments can be placed in a '-...' line \n"

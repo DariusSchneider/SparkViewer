@@ -35,10 +35,8 @@ public class SparkCmds {
 	public SparkSession getSpark() {
 		return spark;
 	}
-
+	
 	public String execTxt(String cmdStr, JTextArea jtxt) {
-		// TODO run multiple commands
-
 		String[] lnarr = cmdStr.split("\n");
 		String cmd = "";
 		String ret = "";
@@ -78,39 +76,28 @@ public class SparkCmds {
 			String par1 = pars[1].trim();
 
 			String par2 = null;
-			if (pars.length < 3 || pars[2].isEmpty())
-				switch (cmd) {
-				case "openfile":
-					par2 = par1.substring(par1.lastIndexOf('/') + 1).trim();
-					break;
-				default:
-					throw new IllegalArgumentException("Invalid command: " + cmd);
-				}
-			else
+			if (pars.length > 2)
 				par2 = pars[2].trim();
 
-			// "openfile; FileName; HiveTempName"
-			// "execsql; HiveTempName; sqlStr"
-			// "writetable; FileName; HiveTempName (makes reread)"
-			// "writecsv; FileName; HiveTempName"
-
+			// "openfile;  FileName; HiveTempName"
+			// "execsql;   HiveTempName; sqlStr"
+			// "writepq;   FileName; HiveTempName (makes reread)"
+			// "writecsv;  FileName; HiveTempName"
+			// "writejson; FileName; HiveTempName"
 			switch (cmd) {
-			case "openfile":
-				Dataset<Row> dataset1 = spark.read().parquet(par1);
-				dataset1.createOrReplaceTempView(par2);
-				return par2;
+			case "open":
+				return open(par1, par2);
 			case "execsql":
-				Dataset<Row> dataset2 = spark.sql(par1);
-				dataset2.createOrReplaceTempView(par2);
-				return par1;
-			case "writetable":
-				spark.table(par2).write().mode("overwrite").parquet(par1);
-				Dataset<Row> dataset3 = spark.read().parquet(par1);
-				dataset3.createOrReplaceTempView(par2);
+				execsql(par1, par2);
+				return par2;
+			case "writepq":
+				writepq(par1, par2);
 				return par2;
 			case "writecsv":
-				spark.table(par2).repartition(1).write().mode("overwrite").option("header", "true")
-						.option("delimiter", ";").csv(par1);
+				writecsv(par1, par2);
+				return null;
+			case "writejson":
+				writejson(par1, par2);
 				return null;
 			default:
 				throw new IllegalArgumentException("Invalid command: " + cmd);
@@ -119,6 +106,44 @@ public class SparkCmds {
 		} catch (Exception ee) {
 			throw new IllegalArgumentException("Invalid command string: " + cmdStr + "\n" + ee.getMessage());
 		}
+	}
+
+	public String open (String filename) {
+		return open(filename, null);
+	}
+	public String open (String filename, String tabname) {
+		if (tabname == null)
+			tabname = filename.substring(filename.replace('\\','/').lastIndexOf('/') + 1).trim();
+		
+		Dataset<Row> dataset1 = spark.read().parquet(filename);
+	    dataset1.createOrReplaceTempView(tabname);
+	    return tabname;
+	}
+	public Dataset<Row> execsql (String sqlstr, String tabname) {				
+		Dataset<Row> dataset1 = spark.sql(sqlstr);
+	    dataset1.createOrReplaceTempView(tabname);
+	    return dataset1;
+	}
+	public void writepq  (String filename, Dataset<Row> table) {				
+		table.write().mode("overwrite").parquet(filename);
+	}	
+	public Dataset<Row> writepq  (String filename, String tabname) {				
+		spark.table(tabname).write().mode("overwrite").parquet(filename);
+		Dataset<Row> dataset1 = spark.read().parquet(filename);
+		dataset1.createOrReplaceTempView(tabname);
+	    return dataset1;
+	}
+	public void writecsv (String filename, String tabname) {
+		writecsv (filename, spark.table(tabname));
+	}
+	public void writecsv (String filename, Dataset<Row> table) {				
+		table.repartition(1).write().mode("overwrite").option("header", "true").option("delimiter", ";").csv(filename);
+	}
+	public void writejson (String filename, String tabname) {
+		writejson (filename, spark.table(tabname));
+	}
+	public void writejson(String filename, Dataset<Row> table) {				
+		table.repartition(1).write().mode("overwrite").option("multiLine", "true").json(filename);
 	}
 
 }

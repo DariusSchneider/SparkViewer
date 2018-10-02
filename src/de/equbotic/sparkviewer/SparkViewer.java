@@ -25,7 +25,7 @@ public class SparkViewer {
 
 	public static void main(String[] args) throws AnalysisException {
 		
-		SparkSession spark = SparkSession.builder().appName("DataFramegGuiTest").master("local[*]").getOrCreate();
+		SparkSession spark = SparkSession.builder().appName("SparkViewer").master("local[*]").getOrCreate();
 	    spark.sparkContext().setLogLevel("ERROR");
 	                  
 	    if (args.length > 0) {
