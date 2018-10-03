@@ -50,7 +50,7 @@ set  MY_HOME=/home/work/prj/SparkViewer
 path=%JAVA_HOME%/bin
 cd %MY_HOME%/src
 javac de/equbotic/sparkviewer/*.java -cp .;%SPARK_HOME%/jars/*
-jar cvf sparkViewer.jar de/equbotic/sparkviewer/*.java
+jar cvf sparkViewer.jar de/equbotic/sparkviewer/*.class
 ```
 ### use with eclipse
 ```
