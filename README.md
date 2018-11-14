@@ -5,7 +5,7 @@ The GUI can be added to a spark shell, so that you are able to browse the tables
 SparkViewer uses the hive catalog to access the tables. 
 So a temporary Spark Dataset can be made accessible by adding it to the catalog (dataset.createOrReplaceTempView(tabname)).
 
-![SparkViewer0](SparkViewer.png)
+![SparkViewer0](SparkViewer.PNG)
 
 ## Quick Start
 ### Prerequisites
