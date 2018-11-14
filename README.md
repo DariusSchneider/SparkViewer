@@ -5,7 +5,7 @@ The GUI can be added to a spark shell, so that you are able to browse the tables
 SparkViewer uses the hive catalog to access the tables. 
 So a temporary Spark Dataset can be made accessible by adding it to the catalog (dataset.createOrReplaceTempView(tabname)).
 
-![SparkViewer0](SparkViewer.PNG)
+![SparkViewer0](SparkViewer.png)
 
 ## Quick Start
 ### Prerequisites
@@ -62,19 +62,19 @@ Functions:
 
 Popup Menu:
 
-* filter - Opens a dialog where a filter definition can be entered (sql syntax, 'column =  123').  
+* filter - Opens a dialog where a filter definition can be entered (sql syntax, 'column =  123').   
            After confiming, a new Table View is created.
-* limit -  Opens a dialog where a new limit for the table size can be defined (default = 200).  
+* limit -  Opens a dialog where a new limit for the table size can be defined (default = 200).   
            After confiming, a new Table View is created.
 * distinct - Opens a dialog where a column for grouping can be entered.   
              After confiming, a new Table View is created with the distinct values of the column and the count of rows.
-* copy_headers - Copies the column headers (tab seperated) to the clipboard (you can paste this to excel).
+* copy_headers - Copies the column headers (tab seperated) to the clipboard (you can paste this to excel).   
                  The rows can be marked with the cursor and copied with ctrl-v (excel needs to accept '.' as decimal point).
-* writepq_and_load - Opens a new file dialog.
+* writepq_and_load - Opens a new file dialog.   
               After confiming, the dataset is written to the directory and rereaded with the filename as hive table name.
-* writecsv -  Opens a new file dialog.
+* writecsv -  Opens a new file dialog.   
               After confiming, the dataset is written to the directory as csv-file. The csv-file is separated with ';'.
-* writejson - Opens a new file dialog.
+* writejson - Opens a new file dialog.   
               After confiming, the dataset is written to the directory as json-file.
 
 ### Tree Tab
@@ -92,11 +92,11 @@ The console consists of 3 areas separated by a line with '=':
 
 1. commands - here you can place commands that can be interepreted and executed.
              Multiple commands can be entered. They have to be separated by a line starting with '-'.
-2. infos - here a short description is placed and the commands syntax is listed:
-		open;       	FileName; 	TableName (infer type)
-		execsql;    	SqlStr;   	TableName
-		writepq;    	FileName; 	TableName (makes reread)
-		writecsv;   	FileName; 	TableName
+2. infos - here a short description is placed and the commands syntax is listed:   
+		open;       	FileName; 	TableName (infer type)   
+		execsql;    	SqlStr;   	TableName   
+		writepq;    	FileName; 	TableName (makes reread)   
+		writecsv;   	FileName; 	TableName   
 		writejson;  	FileName; 	TableName
 3. log - here logging of the actions ist added
 
@@ -105,7 +105,7 @@ The console consists of 3 areas separated by a line with '=':
 #### EXEC/Open
 * Exec Command - executes everything in the command area.
 * Exec Marked - executes the markes text.
-* Open File (infer type) - opens a file open dialogbox.
+* Open File (infer type) - opens a file open dialogbox.   
            After confiming, the file/directory is interpreted to infer the type and a new Table View is created.
            
 #### Tables

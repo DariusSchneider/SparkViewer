@@ -162,8 +162,11 @@ public class DfTableModel extends AbstractTableModel {
 		    //	schema.fields()[c].dataType()  //TODO set correct Types if null
 		    //TODO Datetime ist not correctly shown
 		    	Object oo = null;
-		    	if      (rows.length > 1) oo = getValueAt(1, c);
-		    	else if (rows.length > 0) oo = getValueAt(0, c);
+		    	for  (int ii = 0; oo == null && ii < rows.length; ii++) {
+		    		oo = getValueAt(ii, c);
+		    	}
+//		    	if      (rows.length > 1) oo = getValueAt(1, c);
+//		    	else if (rows.length > 0) oo = getValueAt(0, c);
 		    	
 		    	if (oo == null) return String.class;
 		    	else            return oo.getClass();
